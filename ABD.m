@@ -29,6 +29,15 @@ for k=1:NL;
     A=Qbar(Mat_Type(k,:),Angles(k))*Thickness(k)+ A;
 end
 
+MinA=max(max(A))/10000;
+for j=1:3
+    for k=1:3
+        if abs(A(j,k))<=MinA
+            A(j,k)=0;
+        end
+    end
+end
+
 
 %The B Matrix
 B=zeros(3,3);
@@ -49,6 +58,14 @@ end
 D=zeros(3,3);
 for k=1:NL
     D=(1/3)*Qbar(Mat_Type(k,:),Angles(k))*(z(k+1)^3 - z(k)^3) + D;
+end
+MinD=max(max(D))/10000;
+for j=1:3
+    for k=1:3
+        if abs(D(j,k))<=MinD
+            D(j,k)=0;
+        end
+    end
 end
 
 

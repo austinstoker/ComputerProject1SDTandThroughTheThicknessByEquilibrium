@@ -1,0 +1,79 @@
+%This program uses Shear deformation theory to find the stresses and
+%strains on a plate.  Navier solutions are used which assume Simply
+%supported edges on a rectangular plate of a symmetric cross-ply laminate
+%Austin Stoker Oct 2013
+close all
+clearvars
+clc
+
+% Set flags, counts, limits etc
+doPlots=false;
+PmnFunc=@Pmn_Uniform; %Which loading to use
+P0=20;
+numInfSum=20; %how many n,m to use
+mList=1:numInfSum;
+nList=1:numInfSum;
+a=1; %length of the sides a
+b=1; %length of sides b
+xList=0:.1:1;
+yList=0:.1:1;
+
+
+% Write the material properties
+            %E1 , E2   ,  G12, v12,        ,       ,    ,v23 ,    
+Mat_Types=[155E9,12.1E9,4.4E9,.248,-.018E-6,24.3E-6,.248,.458,24.3E-6];
+dlmwrite('materials.txt',Mat_Types);
+
+Angles=[90,0,0,90];
+Materials=[1,1,1,1,];
+Thicknesses=[.001,.001,.001,.001,];
+
+
+NL=size(Angles,2);
+Big(1:NL,1)=Materials(1:NL);
+Big(1:NL,2)=Angles(1:NL);
+Big(1:NL,3)=Thicknesses(1:NL);
+
+dlmwrite('laminate.txt',Big);
+
+Mat_Props(1:NL,:)=Mat_Types(Materials(1:NL),:);
+
+% Get the expanded ABD_SDT
+ABD=make_ABD_SDT(Mat_Props,Angles,Thicknesses);
+
+% Set up mn stuff
+S_hat=make_Shat(6/5,ABD,mList,a,nList,b);
+b0=make_b0(S_hat);
+b1=make_b1(S_hat);
+b2=make_b2(S_hat);
+bmn=make_bmn(S_hat,b0,b1,b2);
+Pmn=make_Pmn(PmnFunc,mList,nList,P0);
+Wmn=make_Wmn(Pmn,b0,bmn);
+Xmn=make_Xmn(Pmn,b1,bmn);
+Ymn=make_Ymn(Pmn,b2,bmn);
+
+% Get xy stuff
+
+P_At_xy=make_P_At_xy(Pmn,xList,yList,nList,mList,a,b);
+
+
+
+
+
+
+%% test loading
+if doPlots==true
+    numPoints=11;
+    numInfSum=50;
+    for i=1:numPoints+1
+        for j=1:numPoints+1
+            xloc(i)=(i-1)/numPoints;
+            yloc(j)=(j-1)/numPoints;
+            List=1:numInfSum;
+            P(i,j)=Pxy(@Pmn_HydrostaticVaryingInX,List,List,1,xloc(i),1,yloc(j),10);
+        end
+    end
+
+    surf(xloc,yloc,P);
+end
+

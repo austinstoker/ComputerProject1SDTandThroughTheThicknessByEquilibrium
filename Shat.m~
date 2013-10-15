@@ -1,0 +1,14 @@
+function [ Shat ] = Shat( K,ABD_SDT,m,a,n,b)
+%UNTITLED3 Summary of this function goes here
+%   Detailed explanation goes here
+A55=ABD_SDT(5,5);
+A44=ABD_SDT(4,4);
+D11=ABD_SDT(6,6);
+D12=ABD_SDT(6,7);
+D22=ABD_SDT(7,7)
+alm=m*pi/a;
+betn=n*pi/b;
+S11=K*(A55*alm^2+A44*betn^2);
+
+end
+
