@@ -8,16 +8,18 @@ clc
 
 % Set flags, counts, limits etc
 doPlots=true;
-PmnFunc=@Pmn_Uniform; %Which loading to use
-P0=20;
+PmnFunc=@Pmn_HydrostaticVaryingInX; %Which loading to use
+P0=20000;
 numInfSum=20; %how many n,m to use
 mList=1:numInfSum;
 nList=1:numInfSum;
-a=1; %length of the sides a
-b=1; %length of sides b
-xList=0:.1:1;
-yList=0:.1:1;
-zList=-.002:.0001:.002;
+a=.1; %length of the sides a
+b=.1; %length of sides b
+xList=0:.01:.1;
+yList=0:.01:.1;
+zList=-.00127*4:.00127/100:.00127*4;
+xPt=0;
+yPt=0;
 
 
 % Write the material properties
@@ -25,9 +27,9 @@ zList=-.002:.0001:.002;
 Mat_Types=[155E9,12.1E9,4.4E9,.248,-.018E-6,24.3E-6,.248,.458,24.3E-6];
 dlmwrite('materials.txt',Mat_Types);
 
-Angles=[90,0,0,90];
-Materials=[1,1,1,1,];
-Thicknesses=[.001,.001,.001,.001,];
+Angles=[0,90,90,0,0,90,90,0];
+Materials=[1,1,1,1,1,1,1,1];
+Thicknesses=[.00127,.00127,.00127,.00127,.00127,.00127,.00127,.00127];
 
 NL=size(Angles,2);
 Big(1:NL,1)=Materials(1:NL);
@@ -53,7 +55,6 @@ Xmn=make_Xmn(Pmn,b1,bmn);
 Ymn=make_Ymn(Pmn,b2,bmn);
 
 % Get xy stuff
-
 P_at_xy=make_P_At_xy(Pmn,xList,yList,nList,mList,a,b);
 w_at_xy=make_w_At_xy(Wmn,xList,yList,nList,mList,a,b);
 Phix_at_xy=make_Phix_At_xy(Xmn,xList,yList,nList,mList,a,b);
@@ -65,9 +66,74 @@ Gamxz_at_xy=make_Gamxz_At_xy(Wmn,Xmn,xList,yList,nList,mList,a,b);
 Gamyz_at_xy=make_Gamyz_At_xy(Wmn,Ymn,xList,yList,nList,mList,a,b);
 
 
+% Setup strains
+ex_xyz=zeros(numel(xList),numel(yList),numel(zList));
+ey_xyz=zeros(numel(xList),numel(yList),numel(zList));
+Gamxy_xyz=zeros(numel(xList),numel(yList),numel(zList));
+Strains_xyz=zeros(numel(xList),numel(yList),numel(zList),5);
+for k=1:numel(zList)
+    ex_xyz(:,:,k)=ex_at_xy.*zList(k); % 1) only these three vary with z
+    ey_xyz(:,:,k)=ey_at_xy.*zList(k); % 2
+    Gamxy_xyz(:,:,k)=Gamxy_at_xy.*zList(k); % 3
+    %Build the Strains matrix
+    Strains_xyz(:,:,k,1)=ex_xyz(:,:,k);
+    Strains_xyz(:,:,k,2)=ey_xyz(:,:,k);
+    Strains_xyz(:,:,k,3)=Gamxy_xyz(:,:,k);
+    Strains_xyz(:,:,k,4)=Gamyz_at_xy(:,:);
+    Strains_xyz(:,:,k,5)=Gamxz_at_xy(:,:);
+end
+
+
+% Setup Qbar for each layer
+Qbar=zeros(5,5,NL);
+for k=1:NL
+    Qbar(:,:,k)=make_Qbar_SDT(Mat_Props(k,:),Angles(k));
+end
+
+% Get the Stresses
+Stress_xyz=zeros(numel(xList),numel(yList),numel(zList),5);
+for i=1:numel(xList)
+    x=xList(i);
+    for j=1:numel(yList)
+        y=yList(j);
+        for k=1:numel(zList)
+            z=zList(k);
+            layer=get_layer(z,Thicknesses);
+            thisStrain=zeros(5,1);
+            for r=1:5
+                thisStrain(r)=Strains_xyz(i,j,k,r);
+            end
+            Stress_xyz(i,j,k,:)=Qbar(:,:,layer)*thisStrain;
+        end
+    end
+end
+
+% Now the fun stuff, transverse junk
+
+%%
+if doPlots==true 
+    [~,i] = min(abs(xList-xPt));
+    [~,j] = min(abs(yList-yPt));
+    
+    sigx=zeros(numel(zList),1);
+    epsx=zeros(numel(zList),1);
+    for k=1:numel(zList)
+        sigx(k)=Stress_xyz(i,j,k,1);
+        epsx(k)=Strains_xyz(i+10,j+10,k,1);
+    end
+    figure(1)
+    plot(sigx,zList)
+    figure(2)
+    plot(epsx,zList)
+    figure(3)
+    surf(xList,yList,w_at_xy);
+end
+
+
 
 %% test loading
 if doPlots==true
+    figure(4);
     surf(xList,yList,P_at_xy);
 end
 

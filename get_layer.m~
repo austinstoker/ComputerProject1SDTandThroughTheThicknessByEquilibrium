@@ -1,0 +1,20 @@
+function [ get_layer ] = get_layer(z,Thicknesses)
+%The bounds of the bottom, (highest z) yes it's supposed to be z down in
+%composites, are both counted as part of the last layer, everywhere else
+%the bound counts as part of the layer below it 
+zloc=Thicknesses-sum(Thicknesses)/2;
+
+for i=1:numel(zloc)-1
+    if z>=zloc(i) && z<zloc(i+1)
+        get_layer=i;
+        return
+    end
+end
+if z==zloc(end);
+    get_layer=numel(zloc);
+    return
+end
+get_layer=0;
+return
+end
+
