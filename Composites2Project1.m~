@@ -54,8 +54,9 @@ Ymn=make_Ymn(Pmn,b2,bmn);
 
 % Get xy stuff
 
-P_At_xy=make_P_At_xy(Pmn,xList,yList,nList,mList,a,b);
-
+P_at_xy=make_P_At_xy(Pmn,xList,yList,nList,mList,a,b);
+w_at_xy=make_w_At_xy(Wmn,xList,yList,nList,mList,a,b);
+Phix_at_xy=make_Phix_At_xy
 
 
 

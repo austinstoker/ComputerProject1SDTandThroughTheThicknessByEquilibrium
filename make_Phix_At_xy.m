@@ -1,7 +1,7 @@
-function [Pxy] = make_P_At_xy(Pmn,xList,yList,nList,mList,a,b)
+function [Phix_xy] = make_Phix_At_xy(Xmn,xList,yList,nList,mList,a,b)
 %This will take the orientation and properties of a laminate,
 % and return the ABD Matrix
-Pxy=zeros(numel(xList),numel(yList));
+Phix_xy=zeros(numel(xList),numel(yList));
 for i=1:numel(xList)
     x=xList(i);
     for j=1:numel(yList)
@@ -10,7 +10,7 @@ for i=1:numel(xList)
             m=mList(i2);
             for j2=1:numel(nList)
                 n=nList(j2);
-                Pxy(i,j)=Pxy(i,j)+Pmn(i2,j2)*sin(m*pi*x/a)*sin(n*pi*y/b);
+                Phix_xy(i,j)=Phix_xy(i,j)+Xmn(i2,j2)*cos(m*pi*x/a)*sin(n*pi*y/b);
             end
         end
     end

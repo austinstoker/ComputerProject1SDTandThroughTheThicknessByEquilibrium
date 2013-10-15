@@ -1,4 +1,4 @@
-function [ABD] = ABD( Mat_Type, Angles, Thickness)
+function [ABD] = make_ABD( Mat_Type, Angles, Thickness)
 %This will take the orientation and properties of a laminate,
 % and return the ABD Matrix
 
@@ -26,7 +26,7 @@ end
 %Create the A matris
 A=zeros(3,3);
 for k=1:NL;
-    A=Qbar(Mat_Type(k,:),Angles(k))*Thickness(k)+ A;
+    A=make_Qbar(Mat_Type(k,:),Angles(k))*Thickness(k)+ A;
 end
 
 MinA=max(max(A))/10000;
@@ -42,7 +42,7 @@ end
 %The B Matrix
 B=zeros(3,3);
 for k=1:NL
-    B=(.5)*Qbar(Mat_Type(k,:),Angles(k))*(z(k+1)^2 - z(k)^2) + B;
+    B=(.5)*make_Qbar(Mat_Type(k,:),Angles(k))*(z(k+1)^2 - z(k)^2) + B;
 end
 %zero out the tiny values of B
 for k=1:3
@@ -57,7 +57,7 @@ end
 %The D Matrix
 D=zeros(3,3);
 for k=1:NL
-    D=(1/3)*Qbar(Mat_Type(k,:),Angles(k))*(z(k+1)^3 - z(k)^3) + D;
+    D=(1/3)*make_Qbar(Mat_Type(k,:),Angles(k))*(z(k+1)^3 - z(k)^3) + D;
 end
 MinD=max(max(D))/10000;
 for j=1:3

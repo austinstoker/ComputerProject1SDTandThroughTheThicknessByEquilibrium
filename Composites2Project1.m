@@ -7,7 +7,7 @@ clearvars
 clc
 
 % Set flags, counts, limits etc
-doPlots=false;
+doPlots=true;
 PmnFunc=@Pmn_Uniform; %Which loading to use
 P0=20;
 numInfSum=20; %how many n,m to use
@@ -17,6 +17,7 @@ a=1; %length of the sides a
 b=1; %length of sides b
 xList=0:.1:1;
 yList=0:.1:1;
+zList=-.002:.0001:.002;
 
 
 % Write the material properties
@@ -27,7 +28,6 @@ dlmwrite('materials.txt',Mat_Types);
 Angles=[90,0,0,90];
 Materials=[1,1,1,1,];
 Thicknesses=[.001,.001,.001,.001,];
-
 
 NL=size(Angles,2);
 Big(1:NL,1)=Materials(1:NL);
@@ -56,24 +56,18 @@ Ymn=make_Ymn(Pmn,b2,bmn);
 
 P_at_xy=make_P_At_xy(Pmn,xList,yList,nList,mList,a,b);
 w_at_xy=make_w_At_xy(Wmn,xList,yList,nList,mList,a,b);
-
-
+Phix_at_xy=make_Phix_At_xy(Xmn,xList,yList,nList,mList,a,b);
+Phiy_at_xy=make_Phiy_At_xy(Ymn,xList,yList,nList,mList,a,b);
+ex_at_xy=make_ex_At_xy(Xmn,xList,yList,nList,mList,a,b);
+ey_at_xy=make_ey_At_xy(Ymn,xList,yList,nList,mList,a,b);
+Gamxy_at_xy=make_Gamxy_At_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
+Gamxz_at_xy=make_Gamxz_At_xy(Wmn,Xmn,xList,yList,nList,mList,a,b);
+Gamyz_at_xy=make_Gamyz_At_xy(Wmn,Ymn,xList,yList,nList,mList,a,b);
 
 
 
 %% test loading
 if doPlots==true
-    numPoints=11;
-    numInfSum=50;
-    for i=1:numPoints+1
-        for j=1:numPoints+1
-            xloc(i)=(i-1)/numPoints;
-            yloc(j)=(j-1)/numPoints;
-            List=1:numInfSum;
-            P(i,j)=Pxy(@Pmn_HydrostaticVaryingInX,List,List,1,xloc(i),1,yloc(j),10);
-        end
-    end
-
-    surf(xloc,yloc,P);
+    surf(xList,yList,P_at_xy);
 end
 

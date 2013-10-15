@@ -1,8 +1,9 @@
-function [ Qreduced ] = Qreduced( E1,E2,G12,nu12)
+function [ Qbar ] = make_Qbar( MatProp,Theta )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-Qreduced=Sreduced( E1,E2,G12,nu12 )^-1;
+Qbar=make_Sbar(MatProp,Theta)^-1;
+
 
 end
 
