@@ -8,18 +8,18 @@ clc
 
 % Set flags, counts, limits etc
 doPlots=true;
-PmnFunc=@Pmn_HydrostaticVaryingInX; %Which loading to use
-P0=20000;
+PmnFunc=@Pmn_Uniform; %Which loading to use
+P0=10000;
 numInfSum=20; %how many n,m to use
 mList=1:numInfSum;
 nList=1:numInfSum;
 a=.1; %length of the sides a
 b=.1; %length of sides b
-xList=0:.01:.1;
-yList=0:.01:.1;
-zList=-.00127*4:.00127/100:.00127*4;
-xPt=0;
-yPt=0;
+xList=[a/4,a/2,3*a/4];
+yList=[b/4,b/2,3*b/4];
+zList=-.00127*4:.00127/20:.00127*4;
+xPt=a/4;
+yPt=b/4;
 
 
 % Write the material properties
@@ -72,8 +72,8 @@ ey_xyz=zeros(numel(xList),numel(yList),numel(zList));
 Gamxy_xyz=zeros(numel(xList),numel(yList),numel(zList));
 Strains_xyz=zeros(numel(xList),numel(yList),numel(zList),5);
 for k=1:numel(zList)
-    ex_xyz(:,:,k)=ex_at_xy.*zList(k); % 1) only these three vary with z
-    ey_xyz(:,:,k)=ey_at_xy.*zList(k); % 2
+    ex_xyz(:,:,k)=ex_at_xy.*-zList(k); % 1) only these three vary with z
+    ey_xyz(:,:,k)=ey_at_xy.*-zList(k); % 2
     Gamxy_xyz(:,:,k)=Gamxy_at_xy.*zList(k); % 3
     %Build the Strains matrix
     Strains_xyz(:,:,k,1)=ex_xyz(:,:,k);
@@ -109,6 +109,64 @@ for i=1:numel(xList)
 end
 
 % Now the fun stuff, transverse junk
+% tau_xz
+ex_x=make_ex_x_at_xy(Xmn,xList,yList,nList,mList,a,b);
+ey_x=make_ey_x_at_xy(Ymn,xList,yList,nList,mList,a,b);
+Gamxy_y=make_Gamxy_y_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
+
+tau_xz_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+for i=1:numel(xList)
+    for j=1:numel(yList)
+        tau_xz_e_xyz(i,j,1)=0;
+        for k=2:numel(zList)
+            z=zList(k);
+            layer=get_layer(z,Thicknesses);
+            tau_xz_e_xyz(i,j,k)=tau_xz_e_xyz(i,j,k-1)+((-Qbar(1,1,layer)*ex_x(i,j)-Qbar(1,2,layer)*ey_x(i,j))+Qbar(3,3,layer)*Gamxy_y(i,j))*(zList(k)^2-zList(k-1)^2)/2;
+        end
+    end
+end
+
+% tau_yz
+ey_y=make_ey_y_at_xy(Ymn,xList,yList,nList,mList,a,b);
+ex_y=make_ex_y_at_xy(Xmn,xList,yList,nList,mList,a,b);
+Gamxy_x=make_Gamxy_x_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
+
+tau_yz_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+for i=1:numel(xList)
+    for j=1:numel(yList)
+        tau_yz_e_xyz(i,j,1)=0;
+        for k=2:numel(zList)
+            z=zList(k);
+            layer=get_layer(z,Thicknesses);
+            tau_yz_e_xyz(i,j,k)=tau_yz_e_xyz(i,j,k-1)+((-Qbar(2,2,layer)*ey_y(i,j)-Qbar(1,2,layer)*ex_y(i,j))+Qbar(3,3,layer)*Gamxy_x(i,j))*(zList(k)^2-zList(k-1)^2)/2;
+        end
+    end
+end
+
+%sigma z
+ex_xx=make_ex_xx_at_xy(Xmn,xList,yList,nList,mList,a,b);
+ey_xx=make_ey_xx_at_xy(Ymn,xList,yList,nList,mList,a,b);
+Gamxy_xy=make_Gamxy_xy_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
+ey_yy=make_ey_yy_at_xy(Ymn,xList,yList,nList,mList,a,b);
+ex_yy=make_ex_yy_at_xy(Xmn,xList,yList,nList,mList,a,b);
+
+sig_z_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+for i=1:numel(xList)
+    for j=1:numel(yList)
+        tau_xz_e_xyz(i,j,1)=0;
+        for k=2:numel(zList)
+            z=zList(k);
+            layer=get_layer(z,Thicknesses);
+            sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)+...
+                (((-Qbar(2,2,layer)*ey_yy(i,j)-Qbar(1,2,layer)*ex_yy(i,j))...
+                +Qbar(3,3,layer)*Gamxy_xy(i,j)) + ...
+                ((-Qbar(1,1,layer)*ex_xx(i,j)-Qbar(1,2,layer)*ey_xx(i,j))...
+                +Qbar(3,3,layer)*Gamxy_xy(i,j)))...
+                *(zList(k)^2-zList(k-1)^2)/2;
+        end
+    end
+end
+
 
 %%
 if doPlots==true 
@@ -117,23 +175,38 @@ if doPlots==true
     
     sigx=zeros(numel(zList),1);
     epsx=zeros(numel(zList),1);
+    tauxy=zeros(numel(zList,1));
     for k=1:numel(zList)
         sigx(k)=Stress_xyz(i,j,k,1);
-        epsx(k)=Strains_xyz(i+10,j+10,k,1);
+        epsx(k)=Strains_xyz(i,j,k,1);
+        tauxz(k)=tau_xz_e_xyz(i,j,k);
+        tauyz(k)=tau_yz_e_xyz(i,j,k);
+        sigz(k)=sig_z_e_xyz(i,j,k);
     end
     figure(1)
     plot(sigx,zList)
     figure(2)
     plot(epsx,zList)
+    
     figure(3)
+    plot(tauxz,zList);
+    
+    figure(4)
+    plot(tauyz,zList);
+    
+    figure(5)
+    plot(sigz,zList);
+    
+    figure(6)
     surf(xList,yList,w_at_xy);
+    
 end
 
 
 
 %% test loading
 if doPlots==true
-    figure(4);
+    figure(7);
     surf(xList,yList,P_at_xy);
 end
 
