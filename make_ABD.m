@@ -4,7 +4,7 @@ function [ABD] = make_ABD( Mat_Type, Angles, Thickness)
 
 
 
-NL=size(Angles,1); %number of layers
+NL=size(Angles,2); %number of layers
 
 
 

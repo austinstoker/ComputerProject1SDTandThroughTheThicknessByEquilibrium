@@ -8,18 +8,20 @@ clc
 
 % Set flags, counts, limits etc
 doPlots=true;
-PmnFunc=@Pmn_Uniform; %Which loading to use
-P0=10000;
-numInfSum=20; %how many n,m to use
+PmnFunc=@Pmn_Simple_Sine; %Which loading to use
+P0=10000; %Pa
+numInfSum=1; %how many n,m to use
 mList=1:numInfSum;
 nList=1:numInfSum;
 a=.1; %length of the sides a
 b=.1; %length of sides b
-xList=[a/4,a/2,3*a/4];
-yList=[b/4,b/2,3*b/4];
-zList=-.00127*4:.00127/20:.00127*4;
+xList=[a/4];
+yList=[b/4];
+t=.000150;
+zList=-t*2:t/100:t*2;
 xPt=a/4;
 yPt=b/4;
+K=5/6;
 
 
 % Write the material properties
@@ -27,9 +29,10 @@ yPt=b/4;
 Mat_Types=[155E9,12.1E9,4.4E9,.248,-.018E-6,24.3E-6,.248,.458,24.3E-6];
 dlmwrite('materials.txt',Mat_Types);
 
-Angles=[0,90,90,0,0,90,90,0];
-Materials=[1,1,1,1,1,1,1,1];
-Thicknesses=[.00127,.00127,.00127,.00127,.00127,.00127,.00127,.00127];
+Angles=[0,90,90,0]; %[0,90,90,0,0,90,90,0];
+Materials=ones(1,numel(Angles)); % [1,1,1,1,1,1,1,1];
+%t=.000150;
+Thicknesses= t*ones(1,numel(Angles)); %[t,t,t,t,t,t,t,t];
 
 NL=size(Angles,2);
 Big(1:NL,1)=Materials(1:NL);
@@ -44,7 +47,7 @@ Mat_Props(1:NL,:)=Mat_Types(Materials(1:NL),:);
 ABD=make_ABD_SDT(Mat_Props,Angles,Thicknesses);
 
 % Set up mn stuff
-S_hat=make_Shat(6/5,ABD,mList,a,nList,b);
+S_hat=make_Shat(K,ABD,mList,a,nList,b);
 b0=make_b0(S_hat);
 b1=make_b1(S_hat);
 b2=make_b2(S_hat);
@@ -115,13 +118,17 @@ ey_x=make_ey_x_at_xy(Ymn,xList,yList,nList,mList,a,b);
 Gamxy_y=make_Gamxy_y_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
 
 tau_xz_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+sig_x_x = tau_xz_e_xyz;
+tau_xy_y = tau_xz_e_xyz;
 for i=1:numel(xList)
     for j=1:numel(yList)
         tau_xz_e_xyz(i,j,1)=0;
         for k=2:numel(zList)
             z=zList(k);
             layer=get_layer(z,Thicknesses);
-            tau_xz_e_xyz(i,j,k)=tau_xz_e_xyz(i,j,k-1)+((-Qbar(1,1,layer)*ex_x(i,j)-Qbar(1,2,layer)*ey_x(i,j))+Qbar(3,3,layer)*Gamxy_y(i,j))*(zList(k)^2-zList(k-1)^2)/2;
+            sig_x_x(i,j,k) = Qbar(1,1,layer)*ex_x(i,j)+Qbar(1,2,layer)*ey_x(i,j);
+            tau_xy_y(i,j,k) = Qbar(3,3,layer)*Gamxy_y(i,j);
+            tau_xz_e_xyz(i,j,k)=tau_xz_e_xyz(i,j,k-1)+(sig_x_x(i,j,k)+tau_xy_y(i,j,k))*(zList(k)^2-zList(k-1)^2)/2;
         end
     end
 end
@@ -138,7 +145,7 @@ for i=1:numel(xList)
         for k=2:numel(zList)
             z=zList(k);
             layer=get_layer(z,Thicknesses);
-            tau_yz_e_xyz(i,j,k)=tau_yz_e_xyz(i,j,k-1)+((-Qbar(2,2,layer)*ey_y(i,j)-Qbar(1,2,layer)*ex_y(i,j))+Qbar(3,3,layer)*Gamxy_x(i,j))*(zList(k)^2-zList(k-1)^2)/2;
+            tau_yz_e_xyz(i,j,k)=tau_yz_e_xyz(i,j,k-1)+((-Qbar(2,2,layer)*ey_y(i,j)-Qbar(1,2,layer)*ex_y(i,j))-Qbar(3,3,layer)*Gamxy_x(i,j))*(zList(k)^2-zList(k-1)^2)/2;
         end
     end
 end
@@ -150,19 +157,42 @@ Gamxy_xy=make_Gamxy_xy_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
 ey_yy=make_ey_yy_at_xy(Ymn,xList,yList,nList,mList,a,b);
 ex_yy=make_ex_yy_at_xy(Xmn,xList,yList,nList,mList,a,b);
 
-sig_z_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+sig_z_hat_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
 for i=1:numel(xList)
     for j=1:numel(yList)
-        tau_xz_e_xyz(i,j,1)=0;
+        sig_z_hat_e_xyz(i,j,end)=0;
         for k=2:numel(zList)
             z=zList(k);
             layer=get_layer(z,Thicknesses);
-            sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)+...
+            sig_z_hat_e_xyz(i,j,k)=sig_z_hat_e_xyz(i,j,k-1)+...
                 (((-Qbar(2,2,layer)*ey_yy(i,j)-Qbar(1,2,layer)*ex_yy(i,j))...
-                +Qbar(3,3,layer)*Gamxy_xy(i,j)) + ...
+                -Qbar(3,3,layer)*Gamxy_xy(i,j)) + ...
                 ((-Qbar(1,1,layer)*ex_xx(i,j)-Qbar(1,2,layer)*ey_xx(i,j))...
-                +Qbar(3,3,layer)*Gamxy_xy(i,j)))...
+                -Qbar(3,3,layer)*Gamxy_xy(i,j)))...
                 *(zList(k)^2-zList(k-1)^2)/2;
+        end
+    end
+end
+
+
+sig_z_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+for i=1:numel(xList)
+    for j=1:numel(yList)
+        sig_z_e_xyz(i,j,1)=P_at_xy(i,j);
+        for k=2:numel(zList)
+            z=zList(k);
+            layer=get_layer(z,Thicknesses);
+            bob=0;
+            for k2=2:k
+                z2=zList(k2);
+                layer2=get_layer(z2,Thicknesses);
+                bob=bob+(((-Qbar(2,2,layer2)*ey_yy(i,j)-Qbar(1,2,layer2)*ex_yy(i,j))...
+                -Qbar(3,3,layer2)*Gamxy_xy(i,j)) + ...
+                ((-Qbar(1,1,layer2)*ex_xx(i,j)-Qbar(1,2,layer2)*ey_xx(i,j))...
+                -Qbar(3,3,layer2)*Gamxy_xy(i,j)))*...
+                ((zList(k2)^3-zList(k2-1)^3)/6 - ((zList(k2)-zList(k2-1))*(zList(k)^2))/2);
+            end
+            sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)+sig_z_hat_e_xyz(i,j,k-1)*(zList(k)-zList(k-1))+bob;
         end
     end
 end
@@ -174,10 +204,16 @@ if doPlots==true
     [~,j] = min(abs(yList-yPt));
     
     sigx=zeros(numel(zList),1);
+    sigy=zeros(numel(zList),1);
     epsx=zeros(numel(zList),1);
     tauxy=zeros(numel(zList,1));
+    tauxz=zeros(numel(zList,1));
+    tauyz=zeros(numel(zList,1));
+    sigz=zeros(numel(zList,1));
     for k=1:numel(zList)
         sigx(k)=Stress_xyz(i,j,k,1);
+        sigy(k)=Stress_xyz(i,j,k,2);
+        tauxy(k)=Stress_xyz(i,j,k,3);
         epsx(k)=Strains_xyz(i,j,k,1);
         tauxz(k)=tau_xz_e_xyz(i,j,k);
         tauyz(k)=tau_yz_e_xyz(i,j,k);
@@ -185,19 +221,26 @@ if doPlots==true
     end
     figure(1)
     plot(sigx,zList)
+    title('sig x');
+    
     figure(2)
-    plot(epsx,zList)
+    plot(sigy,zList)
+    title('sig y');
     
     figure(3)
-    plot(tauxz,zList);
+    plot(tauxy,zList)
+    title('tau_x_y')
     
     figure(4)
-    plot(tauyz,zList);
+    plot(tauxz,zList);
     
     figure(5)
-    plot(sigz,zList);
+    plot(tauyz,zList);
     
     figure(6)
+    plot(sigz,zList);
+    
+    figure(7)
     surf(xList,yList,w_at_xy);
     
 end
