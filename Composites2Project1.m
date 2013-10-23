@@ -8,8 +8,11 @@ clc
 
 % Set flags, counts, limits etc
 mycase=1;
+for mycase=2:5
+close all
 doPlots=true;
 if mycase==0  %verification case a
+    saveTitle = 'verification a';
     PmnFunc=@Pmn_Simple_Sine;
     P0=10000;
     numInfSum=1;
@@ -17,47 +20,59 @@ if mycase==0  %verification case a
     numLayers=size(Angles,2);
     a=.1;
     b=.1;
-    xList=[a/2];
-    yList=[b/2];
-    zsteps=1000;
-    xPtQuarter = a/2;
-    yPtQuarter = b/2;
-    t=.000127;
-    
-elseif mycase==1  %verification case b
-    PmnFunc=@Pmn_Uniform;
-    P0=10000;
-    numInfSum=500;
-    Angles=[0,90,90,0];
-    numLayers=size(Angles,2);
-    a=.1;
-    b=.1;
-    xList=[a/4];
-    yList=[b/4];
-    zsteps=1000;
-    xPtQuarter = a/4;
-    yPtQuarter = b/4;
-    t=.000127;
-    
-elseif mycase==2 %a from the project assignment
-    PmnFunc=@Pmn_Uniform;
-    P0=10000;
-    numInfSum=500;
-    Angles=[0,90,90,0];
-    numLayers=size(Angles,2);
-    a=.1;
-    b=.1;
-    xList=[a/4,a/2];
-    yList=[b/4,b/2];
+    xList=[0,a/4,a/2];
+    yList=[0,b/4,b/2];
     zsteps=1000;
     xPtQuarter = a/4;
     yPtQuarter = b/4;
     xPtCenter = a/2;
     yPtCenter = b/2;
+    xPtCorner = 0;
+    yPtCorner = 0;
+    t=.000127;
     
+elseif mycase==1  %verification case b
+    saveTitle = 'verification b';
+    PmnFunc=@Pmn_Uniform;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[0,a/4,a/2];
+    yList=[0,b/4,b/2];
+    zsteps=100;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    xPtCorner = 0;
+    yPtCorner = 0;
+    t=.000127;
+    
+elseif mycase==2 %a from the project assignment
+    saveTitle = 'case a';
+    PmnFunc=@Pmn_Uniform;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[0,a/4,a/2];
+    yList=[0,b/4,b/2];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    xPtCorner = 0;
+    yPtCorner = 0;
     t=.000127; 
     
 elseif mycase==3 %b from the project assignment
+    saveTitle = 'case b';
     PmnFunc=@Pmn_Uniform;
     P0=10000;
     numInfSum=500;
@@ -65,16 +80,19 @@ elseif mycase==3 %b from the project assignment
     numLayers=size(Angles,2);
     a=.2; %
     b=.1;
-    xList=[a/4,a/2];
-    yList=[b/4,b/2];
+    xList=[0,a/4,a/2];
+    yList=[0,b/4,b/2];
     zsteps=1000;
     xPtQuarter = a/4;
     yPtQuarter = b/4;
     xPtCenter = a/2;
     yPtCenter = b/2;
+    xPtCorner = 0;
+    yPtCorner = 0;
     t=.000127; 
 
-elseif mycase==4 %a from the project assignment
+elseif mycase==4 %c from the project assignment
+    saveTitle = 'case c';
     PmnFunc=@Pmn_Simple_Sine; %
     P0=10000;
     numInfSum=1; %
@@ -82,17 +100,19 @@ elseif mycase==4 %a from the project assignment
     numLayers=size(Angles,2);
     a=.1;
     b=.1;
-    xList=[a/4,a/2];
-    yList=[b/4,b/2];
+    xList=[0,a/4,a/2];
+    yList=[0,b/4,b/2];
     zsteps=1000;
     xPtQuarter = a/4;
     yPtQuarter = b/4;
     xPtCenter = a/2;
     yPtCenter = b/2;
-    
+    xPtCorner = 0;
+    yPtCorner = 0; 
     t=.000127; 
     
 elseif mycase==5 %d from the project assignment
+    saveTitle = 'case d';
     PmnFunc=@Pmn_HydrostaticVaryingInX;
     P0=10000;
     numInfSum=500;
@@ -100,13 +120,15 @@ elseif mycase==5 %d from the project assignment
     numLayers=size(Angles,2);
     a=.2; %
     b=.1;
-    xList=[a/4,a/2];
-    yList=[b/4,b/2];
+    xList=[0,a/4,2*a/3,a/2];
+    yList=[0,b/4,b/2];
     zsteps=1000;
     xPtQuarter = a/4;
     yPtQuarter = b/4;
     xPtCenter = a/2;
     yPtCenter = b/2;
+    xPtCorner = 0;
+    yPtCorner = 0;
     t=.000127; 
 end
    
@@ -125,6 +147,14 @@ dlmwrite('materials.txt',Mat_Types);
 
 Materials=ones(1,numel(Angles)); % [1,1,1,1,1,1,1,1];
 Thicknesses= t*ones(1,numel(Angles)); %[t,t,t,t,t,t,t,t];
+
+interfaceList=zeros(numLayers,1);
+val=-sum(Thicknesses)/2;
+interfaceList(1) = val;
+for i=2:numLayers+1
+    val = val+Thicknesses(i-1);
+    interfaceList(i) = val;
+end
 
 NL=size(Angles,2);
 Big(1:NL,1)=Materials(1:NL);
@@ -267,26 +297,36 @@ for i=1:numel(xList)
 end
 
 sig_z_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+sigz_hat_0 = zeros(numel(xList),numel(yList),numel(zList));
 for i=1:numel(xList)
     for j=1:numel(yList)
-        sig_z_e_xyz(i,j,1)=-P0;
+        sig_z_e_xyz(i,j,1)=-P_at_xy(i,j);
         for k=2:numel(zList)
-            z=zList(k);
-            sigz_hat_0 = 0;
+            sigz_hat_0(i,j,k) = 0;
             for j2=2:k-1
-                sigz_hat_0 = sigz_hat_0+T_hat(j2)*(zList(j2)^2-zList(j2-1)^2)/2;
+                sigz_hat_0(i,j,k) = sigz_hat_0(i,j,k)+T_hat(i,j,j2)*(zList(j2)^2-zList(j2-1)^2)/2;
             end
             sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)-...
-             sigz_hat_0*(zList(k)-zList(k-1))-T_hat(k)*...
+             sigz_hat_0(i,j,k)*(zList(k)-zList(k-1))-T_hat(k)*...
              ((zList(k)^3)/6 +(zList(k-1)^3)/3 - (zList(k)*zList(k-1)^2)/2);
         end
     end
 end
 
+wmax=max(max(abs(w_at_xy)));
+[row,col] = find(abs(w_at_xy) == max(max(abs(w_at_xy(:,:)))));
+wmaxx=xList(row);
+wmaxy=yList(col);
 %%
 if doPlots==true 
-    [~,i] = min(abs(xList-xPtQuarter));
-    [~,j] = min(abs(yList-yPtQuarter));
+    [~,iQ] = min(abs(xList-xPtQuarter));
+    [~,jQ] = min(abs(yList-yPtQuarter));
+    
+    [~,iC] = min(abs(xList-xPtCenter));
+    [~,jC] = min(abs(yList-yPtCenter));
+    
+    [~,iR] = min(abs(xList-xPtCorner));
+    [~,jR] = min(abs(yList-yPtCorner));
     
     sigx=zeros(numel(zList),1);
     sigy=zeros(numel(zList),1);
@@ -296,48 +336,100 @@ if doPlots==true
     tauyz=zeros(numel(zList,1));
     sigz=zeros(numel(zList,1));
     for k=1:numel(zList)
-        sigx(k)=Stress_xyz(i,j,k,1);
-        sigy(k)=Stress_xyz(i,j,k,2);
-        tauxy(k)=Stress_xyz(i,j,k,3);
-        epsx(k)=Strains_xyz(i,j,k,1);
-        tauxz(k)=tau_xz_e_xyz(i,j,k);
-        tauyz(k)=tau_yz_e_xyz(i,j,k);
-        sigz(k)=sig_z_e_xyz(i,j,k);
+        sigx(k)=Stress_xyz(iC,jC,k,1);
+        sigy(k)=Stress_xyz(iC,jC,k,2);
+        tauxy(k)=Stress_xyz(iR,jR,k,3);
+        %epsx(k)=Strains_xyz(iQ,jQ,k,1);
+        tauxz(k)=tau_xz_e_xyz(iQ,jQ,k);
+        tauyz(k)=tau_yz_e_xyz(iQ,jQ,k);
+        sigz(k)=sig_z_e_xyz(iC,jC,k);
     end
     figure(1)
+    subplot(2,3,1);
     plot(sigx,zList)
-    title('sig x');
+    title(strcat('sig_x at center (',num2str(xPtCenter),', ',num2str(yPtCenter),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
     
-    figure(2)
+    subplot(2,3,2);
     plot(sigy,zList)
-    title('sig y');
+    title(strcat('sig_y at center (',num2str(xPtCenter),', ',num2str(yPtCenter),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
     
-    figure(3)
-    plot(tauxy,zList)
-    title('tau_x_y')
-    
-    figure(4)
-    plot(tauxz,zList);
-    title('tau_x_z')
-    
-    figure(5)
-    plot(tauyz,zList);
-    title('tau_y_z')
-    
-    figure(6)
+    subplot(2,3,3);
     plot(sigz,zList);
-    title('sig_z')
+    title(strcat('sig_z at the center (',num2str(xPtCenter),', ',num2str(yPtCenter),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
     
-    figure(7)
-    %surf(xList,yList,w_at_xy);
+    subplot(2,3,4);
+    plot(tauxy,zList)
+    title(strcat('tau_x_y at the corner (',num2str(xPtCorner),', ',num2str(yPtCorner),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
     
+    subplot(2,3,5);
+    plot(tauxz,zList);
+    title(strcat('tau_x_z at the quarter (',num2str(xPtQuarter),', ',num2str(yPtQuarter),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
+    
+    subplot(2,3,6);
+    plot(tauyz,zList);
+    title(strcat('tau_y_z at the quarter (',num2str(xPtQuarter),', ',num2str(yPtQuarter),')'));
+    set(gca, 'YDir', 'reverse')
+    hold on
+    for i=1:numLayers+1
+        plot(xlim,[interfaceList(i) interfaceList(i)],'--k');
+    end
+    plot(xlim,[0 0],'-k');
+    plot([0 0],ylim,'-k');
+    xlabel('Pa')
+    temp = ['For ', saveTitle, ' w_m_a_x is ' ,num2str(wmax) ,' meters at (' ,num2str(wmaxx), ',', num2str(wmaxy),')'];
+    [ax,h3]=suplabel(temp ,'t'); 
+    set(h3,'FontSize',20) 
+    set(figure(1), 'Position', [0 0 2000 1500])
+    
+    set(gcf, 'Color', 'white'); % white bckgr
+    export_fig( gcf, ...      % figure handle
+    saveTitle,... % name of output file without extension
+    '-painters', ...      % renderer
+    '-jpg', ...           % file format
+    '-r144' );             % resolution in cldpi
+    %saveas(figure(1),saveTitle,'jpg') 
 end
 
 
-
-%% test loading
-if doPlots==true
-    figure(7);
-    %surf(xList,yList,P_at_xy);
 end
 
