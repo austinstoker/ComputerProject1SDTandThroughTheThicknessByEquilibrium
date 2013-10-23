@@ -9,13 +9,13 @@ for i=1:numel(Thicknesses)
     zloc(i+1)=zloc(i)+Thicknesses(i);
 end
 for i=1:numel(Thicknesses)
-    if z>=zloc(i) && z<zloc(i+1)
+    if z>zloc(i) && z<=zloc(i+1)
         get_layer=i;
         return
     end
 end
-if z==zloc(end);
-    get_layer=numel(zloc)-1;
+if (z==zloc(1))
+    get_layer=1;
     return
 end
 get_layer=0;

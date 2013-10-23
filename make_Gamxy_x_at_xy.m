@@ -10,8 +10,8 @@ for i=1:numel(xList)
             m=mList(i2);
             for j2=1:numel(nList)
                 n=nList(j2);
-                Gamxy_x(i,j)=Gamxy_x(i,j)+Xmn(i2,j2)*(n*pi/b)*(m*pi/a)*(-1)*sin(m*pi*x/a)*cos(n*pi*y/b)...
-                                           +Ymn(i2,j2)*(m*pi/a)^2*(-1)*sin(m*pi*x/a)*cos(n*pi*y/b);
+                Gamxy_x(i,j)=Gamxy_x(i,j)-Xmn(i2,j2)*(n*pi/b)*(m*pi/a)*(-1)*sin(m*pi*x/a)*cos(n*pi*y/b)...
+                                           -Ymn(i2,j2)*(m*pi/a)^2*(-1)*sin(m*pi*x/a)*cos(n*pi*y/b);
             end
         end
     end

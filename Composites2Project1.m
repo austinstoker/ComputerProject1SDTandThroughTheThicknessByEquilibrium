@@ -7,20 +7,113 @@ clearvars
 clc
 
 % Set flags, counts, limits etc
+mycase=1;
 doPlots=true;
-PmnFunc=@Pmn_Simple_Sine; %Which loading to use
-P0=10000; %Pa
-numInfSum=1; %how many n,m to use
+if mycase==0  %verification case a
+    PmnFunc=@Pmn_Simple_Sine;
+    P0=10000;
+    numInfSum=1;
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[a/2];
+    yList=[b/2];
+    zsteps=1000;
+    xPtQuarter = a/2;
+    yPtQuarter = b/2;
+    t=.000127;
+    
+elseif mycase==1  %verification case b
+    PmnFunc=@Pmn_Uniform;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[a/4];
+    yList=[b/4];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    t=.000127;
+    
+elseif mycase==2 %a from the project assignment
+    PmnFunc=@Pmn_Uniform;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[a/4,a/2];
+    yList=[b/4,b/2];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    
+    t=.000127; 
+    
+elseif mycase==3 %b from the project assignment
+    PmnFunc=@Pmn_Uniform;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0,90,90,0];%
+    numLayers=size(Angles,2);
+    a=.2; %
+    b=.1;
+    xList=[a/4,a/2];
+    yList=[b/4,b/2];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    t=.000127; 
+
+elseif mycase==4 %a from the project assignment
+    PmnFunc=@Pmn_Simple_Sine; %
+    P0=10000;
+    numInfSum=1; %
+    Angles=[0,90,90,0];
+    numLayers=size(Angles,2);
+    a=.1;
+    b=.1;
+    xList=[a/4,a/2];
+    yList=[b/4,b/2];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    
+    t=.000127; 
+    
+elseif mycase==5 %d from the project assignment
+    PmnFunc=@Pmn_HydrostaticVaryingInX;
+    P0=10000;
+    numInfSum=500;
+    Angles=[0,90,90,0,90,90,0];%
+    numLayers=size(Angles,2);
+    a=.2; %
+    b=.1;
+    xList=[a/4,a/2];
+    yList=[b/4,b/2];
+    zsteps=1000;
+    xPtQuarter = a/4;
+    yPtQuarter = b/4;
+    xPtCenter = a/2;
+    yPtCenter = b/2;
+    t=.000127; 
+end
+   
+zList=-t*numLayers/2+t/zsteps:t/zsteps:t*numLayers/2-t/zsteps;
 mList=1:numInfSum;
 nList=1:numInfSum;
-a=.1; %length of the sides a
-b=.1; %length of sides b
-xList=[a/4];
-yList=[b/4];
-t=.000150;
-zList=-t*2:t/100:t*2;
-xPt=a/4;
-yPt=b/4;
+
 K=5/6;
 
 
@@ -29,9 +122,8 @@ K=5/6;
 Mat_Types=[155E9,12.1E9,4.4E9,.248,-.018E-6,24.3E-6,.248,.458,24.3E-6];
 dlmwrite('materials.txt',Mat_Types);
 
-Angles=[0,90,90,0]; %[0,90,90,0,0,90,90,0];
+
 Materials=ones(1,numel(Angles)); % [1,1,1,1,1,1,1,1];
-%t=.000150;
 Thicknesses= t*ones(1,numel(Angles)); %[t,t,t,t,t,t,t,t];
 
 NL=size(Angles,2);
@@ -139,13 +231,17 @@ ex_y=make_ex_y_at_xy(Xmn,xList,yList,nList,mList,a,b);
 Gamxy_x=make_Gamxy_x_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
 
 tau_yz_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+sig_y_y = tau_yz_e_xyz;
+tau_xy_x = tau_yz_e_xyz;
 for i=1:numel(xList)
     for j=1:numel(yList)
         tau_yz_e_xyz(i,j,1)=0;
         for k=2:numel(zList)
             z=zList(k);
             layer=get_layer(z,Thicknesses);
-            tau_yz_e_xyz(i,j,k)=tau_yz_e_xyz(i,j,k-1)+((-Qbar(2,2,layer)*ey_y(i,j)-Qbar(1,2,layer)*ex_y(i,j))-Qbar(3,3,layer)*Gamxy_x(i,j))*(zList(k)^2-zList(k-1)^2)/2;
+            sig_y_y(i,j,k) = Qbar(2,2,layer)*ey_y(i,j)+Qbar(1,2,layer)*ex_y(i,j);
+            tau_xy_x(i,j,k) = Qbar(3,3,layer)*Gamxy_x(i,j);
+            tau_yz_e_xyz(i,j,k)=tau_yz_e_xyz(i,j,k-1)+(sig_y_y(i,j,k)+tau_xy_x(i,j,k))*(zList(k)^2-zList(k-1)^2)/2;
         end
     end
 end
@@ -157,51 +253,40 @@ Gamxy_xy=make_Gamxy_xy_at_xy(Xmn,Ymn,xList,yList,nList,mList,a,b);
 ey_yy=make_ey_yy_at_xy(Ymn,xList,yList,nList,mList,a,b);
 ex_yy=make_ex_yy_at_xy(Xmn,xList,yList,nList,mList,a,b);
 
-sig_z_hat_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
+T_hat=zeros(numel(xList),numel(yList),numel(zList));
 for i=1:numel(xList)
     for j=1:numel(yList)
-        sig_z_hat_e_xyz(i,j,end)=0;
-        for k=2:numel(zList)
+        for k=1:numel(zList)
             z=zList(k);
-            layer=get_layer(z,Thicknesses);
-            sig_z_hat_e_xyz(i,j,k)=sig_z_hat_e_xyz(i,j,k-1)+...
-                (((-Qbar(2,2,layer)*ey_yy(i,j)-Qbar(1,2,layer)*ex_yy(i,j))...
-                -Qbar(3,3,layer)*Gamxy_xy(i,j)) + ...
-                ((-Qbar(1,1,layer)*ex_xx(i,j)-Qbar(1,2,layer)*ey_xx(i,j))...
-                -Qbar(3,3,layer)*Gamxy_xy(i,j)))...
-                *(zList(k)^2-zList(k-1)^2)/2;
+            layer = get_layer(z,Thicknesses);
+            T_hat(i,j,k) = Qbar(1,1,layer)*ex_xx(i,j)+ Qbar(1,2,layer)*(ey_xx(i,j))... %sigma_x_xx
+                          -2*(Qbar(3,3,layer)*Gamxy_xy(i,j))... %2*tauxy_xy
+                          +Qbar(1,2,layer)*(ex_yy(i,j))+Qbar(2,2,layer)*ey_yy(i,j); %sigma_y_yy
         end
     end
 end
-
 
 sig_z_e_xyz=zeros(numel(xList),numel(yList),numel(zList));
 for i=1:numel(xList)
     for j=1:numel(yList)
-        sig_z_e_xyz(i,j,1)=P_at_xy(i,j);
+        sig_z_e_xyz(i,j,1)=-P0;
         for k=2:numel(zList)
             z=zList(k);
-            layer=get_layer(z,Thicknesses);
-            bob=0;
-            for k2=2:k
-                z2=zList(k2);
-                layer2=get_layer(z2,Thicknesses);
-                bob=bob+(((-Qbar(2,2,layer2)*ey_yy(i,j)-Qbar(1,2,layer2)*ex_yy(i,j))...
-                -Qbar(3,3,layer2)*Gamxy_xy(i,j)) + ...
-                ((-Qbar(1,1,layer2)*ex_xx(i,j)-Qbar(1,2,layer2)*ey_xx(i,j))...
-                -Qbar(3,3,layer2)*Gamxy_xy(i,j)))*...
-                ((zList(k2)^3-zList(k2-1)^3)/6 - ((zList(k2)-zList(k2-1))*(zList(k)^2))/2);
+            sigz_hat_0 = 0;
+            for j2=2:k-1
+                sigz_hat_0 = sigz_hat_0+T_hat(j2)*(zList(j2)^2-zList(j2-1)^2)/2;
             end
-            sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)+sig_z_hat_e_xyz(i,j,k-1)*(zList(k)-zList(k-1))+bob;
+            sig_z_e_xyz(i,j,k)=sig_z_e_xyz(i,j,k-1)-...
+             sigz_hat_0*(zList(k)-zList(k-1))-T_hat(k)*...
+             ((zList(k)^3)/6 +(zList(k-1)^3)/3 - (zList(k)*zList(k-1)^2)/2);
         end
     end
 end
 
-
 %%
 if doPlots==true 
-    [~,i] = min(abs(xList-xPt));
-    [~,j] = min(abs(yList-yPt));
+    [~,i] = min(abs(xList-xPtQuarter));
+    [~,j] = min(abs(yList-yPtQuarter));
     
     sigx=zeros(numel(zList),1);
     sigy=zeros(numel(zList),1);
@@ -233,15 +318,18 @@ if doPlots==true
     
     figure(4)
     plot(tauxz,zList);
+    title('tau_x_z')
     
     figure(5)
     plot(tauyz,zList);
+    title('tau_y_z')
     
     figure(6)
     plot(sigz,zList);
+    title('sig_z')
     
     figure(7)
-    surf(xList,yList,w_at_xy);
+    %surf(xList,yList,w_at_xy);
     
 end
 
@@ -250,6 +338,6 @@ end
 %% test loading
 if doPlots==true
     figure(7);
-    surf(xList,yList,P_at_xy);
+    %surf(xList,yList,P_at_xy);
 end
 
