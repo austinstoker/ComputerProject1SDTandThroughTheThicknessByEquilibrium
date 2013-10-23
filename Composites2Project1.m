@@ -56,7 +56,7 @@ elseif mycase==2 %a from the project assignment
     PmnFunc=@Pmn_Uniform;
     P0=10000;
     numInfSum=500;
-    Angles=[0,90,90,0];
+    Angles=[0,90,90,0,90,90,0];
     numLayers=size(Angles,2);
     a=.1;
     b=.1;
@@ -76,7 +76,7 @@ elseif mycase==3 %b from the project assignment
     PmnFunc=@Pmn_Uniform;
     P0=10000;
     numInfSum=500;
-    Angles=[0,90,90,0,90,90,0];%
+    Angles=[0,90,0,90,0];%
     numLayers=size(Angles,2);
     a=.2; %
     b=.1;
@@ -96,7 +96,7 @@ elseif mycase==4 %c from the project assignment
     PmnFunc=@Pmn_Simple_Sine; %
     P0=10000;
     numInfSum=1; %
-    Angles=[0,90,90,0];
+    Angles=[0,90,90,0,90,90,0];
     numLayers=size(Angles,2);
     a=.1;
     b=.1;
@@ -116,7 +116,7 @@ elseif mycase==5 %d from the project assignment
     PmnFunc=@Pmn_HydrostaticVaryingInX;
     P0=10000;
     numInfSum=500;
-    Angles=[0,90,90,0,90,90,0];%
+    Angles=[0,90,0,90,0];%
     numLayers=size(Angles,2);
     a=.2; %
     b=.1;
